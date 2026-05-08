@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全局視野：文字差異顯影系統 (Web版)</title>
+    <!-- 引入 Tailwind CSS 進行現代化戰略佈局 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入開源的 diff 演算法庫，負責底層文字比對 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/7.0.0/diff.min.js"></script>
+    <style>
+        /* 針對 Word 匯出優化的隱藏容器 */
+        #word-export-container { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen p-6">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- 標題區 -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-900">全局視野：文字差異顯影系統</h1>
+            <p class="text-sm text-gray-500 mt-1">戰略層級文本變動識別，支援純前端無伺服器執行與 Word 籌碼固化。</p>
+        </div>
+
+        <!-- 輸入區佈局 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 原始佈局 -->
+            <div class="flex flex-col space-y-2">
+                <label class="font-bold text-gray-700 text-lg flex items-center">
+                    <span class="w-2 h-6 bg-gray-400 mr-2 rounded-sm"></span> 原始佈局 (原文字)
+                </label>
+                <textarea id="text-original" class="w-full h-64 p-4 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" placeholder="請在此貼上原文字..."></textarea>
+            </div>
+
+            <!-- 變動結果 -->
+            <div class="flex flex-col space-y-2">
+                <label class="font-bold text-gray-700 text-lg flex items-center">
+                    <span class="w-2 h-6 bg-blue-500 mr-2 rounded-sm"></span> 變動結果 (修改後文字)
+                </label>
+                <textarea id="text-modified" class="w-full h-64 p-4 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" placeholder="請在此貼上修改後文字..."></textarea>
+            </div>
+        </div>
+
+        <!-- 戰略行動按鍵區 -->
+        <div class="flex flex-wrap gap-4 py-4 border-y border-gray-200">
+            <button onclick="executeComparison()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                開始洞察 (比對文字)
+            </button>
+            <button onclick="exportToWord()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                籌碼固化 (匯出 Word)
+            </button>
+        </div>
+
+        <!-- 顯影結果區 -->
+        <div class="flex flex-col space-y-2">
+            <label class="font-bold text-gray-700 text-lg flex items-center">
+                <span class="w-2 h-6 bg-emerald-500 mr-2 rounded-sm"></span> 顯影結果 (紅字刪除，綠字新增)
+            </label>
+            <div id="display-result" class="w-full min-h-[200px] p-6 bg-white border border-gray-300 rounded-lg shadow-sm text-lg leading-loose whitespace-pre-wrap">
+                <span class="text-gray-400 italic">比對結果將顯示於此...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隱藏的容器，專門用來生成符合 MS Word 解析格式的 HTML -->
+    <div id="word-export-container"></div>
+
+    <script>
+        // 戰略核心：文本比對與渲染引擎
+        function executeComparison() {
+            const textOriginal = document.getElementById('text-original').value;
+            const textModified = document.getElementById('text-modified').value;
+            const displayDiv = document.getElementById('display-result');
+            const exportDiv = document.getElementById('word-export-container');
+
+            if (!textOriginal.trim() && !textModified.trim()) {
+                alert("請先輸入戰略文本以供比對。");
+                return;
+            }
+
+            // 調用 jsdiff 進行字元級別比對
+            const diff = Diff.diffChars(textOriginal, textModified);
+            
+            let displayHtml = '';
+            let exportHtml = '';
+
+            // 解析比對結果並建構視覺化 HTML
+            diff.forEach((part) => {
+                // 處理換行符號，確保網頁與 Word 都能正確換行
+                const textForWeb = part.value.replace(/\n/g, '<br>');
+                const textForWord = part.value.replace(/\n/g, '<br style="mso-data-placement:same-cell;" />');
+
+                if (part.added) {
+                    // 新增：綠色底線與網底
+                    displayHtml += `<span class="bg-green-100 text-green-800 underline decoration-2 decoration-green-600 px-0.5 rounded-sm">${textForWeb}</span>`;
+                    // Word 專用行內樣式 (Microsoft Office 支援的基礎 CSS)
+                    exportHtml += `<span style="background-color: #C8E6C9; color: #1B5E20; text-decoration: underline;">${textForWord}</span>`;
+                } else if (part.removed) {
+                    // 刪除：紅色刪除線與網底
+                    displayHtml += `<span class="bg-red-100 text-red-800 line-through decoration-red-600 px-0.5 rounded-sm">${textForWeb}</span>`;
+                    exportHtml += `<span style="background-color: #FFCDD2; color: #B71C1C; text-decoration: line-through;">${textForWord}</span>`;
+                } else {
+                    // 未變更：維持原樣
+                    displayHtml += `<span>${textForWeb}</span>`;
+                    exportHtml += `<span>${textForWord}</span>`;
+                }
+            });
+
+            // 渲染至畫面
+            displayDiv.innerHTML = displayHtml;
+            // 儲存至隱藏容器準備匯出
+            exportDiv.innerHTML = exportHtml;
+        }
+
+        // 戰略轉換：將 HTML 封裝為 Word 檔案 (.doc)
+        function exportToWord() {
+            const exportDiv = document.getElementById('word-export-container');
+            if (!exportDiv.innerHTML.trim()) {
+                alert("請先執行「開始洞察」產生比對結果後，再匯出籌碼。");
+                return;
+            }
+
+            // 建構符合 MS Word 規範的 HTML 結構與宣告
+            const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <title>文字比對結果報告</title>
+                <style>
+                    body { font-family: '微軟正黑體', sans-serif; line-height: 1.5; font-size: 12pt; }
+                    h1 { font-size: 16pt; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+                </style>
+            </head>
+            <body>
+                <h1>文字比對結果報告</h1>
+                <div>`;
+            const postHtml = "</div></body></html>";
+            
+            // 組合完整的 HTML 內容
+            const html = preHtml + exportDiv.innerHTML + postHtml;
+
+            // 轉換為 Blob 物件 (MIME type 設定為 ms-word)
+            const blob = new Blob(['\ufeff', html], {
+                type: 'application/msword'
+            });
+
+            // 建立虛擬下載連結並觸發下載
+            const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
+            const filename = '文字戰略比對報告.doc';
+            
+            const downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+            
+            if (navigator.msSaveOrOpenBlob) {
+                // 相容 IE
+                navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                // 現代瀏覽器標準作法
+                downloadLink.href = url;
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+            
+            // 銷毀虛擬連結以清理戰場
+            document.body.removeChild(downloadLink);
+        }
+    </script>
+</body>
+</html>
