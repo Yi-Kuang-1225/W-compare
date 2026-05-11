@@ -56,7 +56,7 @@
         <!-- 顯影結果區 -->
         <div class="flex flex-col space-y-2">
             <label class="font-bold text-gray-700 text-lg flex items-center">
-                <span class="w-2 h-6 bg-emerald-500 mr-2 rounded-sm"></span> 顯影結果 (紅字刪除，綠字新增)
+                <span class="w-2 h-6 bg-red-500 mr-2 rounded-sm"></span> 顯影結果 (紅字新增，綠字刪除)
             </label>
             <div id="display-result" class="w-full min-h-[200px] p-6 bg-white border border-gray-300 rounded-lg shadow-sm text-lg leading-loose whitespace-pre-wrap">
                 <span class="text-gray-400 italic">比對結果將顯示於此...</span>
@@ -93,14 +93,13 @@
                 const textForWord = part.value.replace(/\n/g, '<br style="mso-data-placement:same-cell;" />');
 
                 if (part.added) {
-                    // 新增：綠色底線與網底
-                    displayHtml += `<span class="bg-green-100 text-green-800 underline decoration-2 decoration-green-600 px-0.5 rounded-sm">${textForWeb}</span>`;
-                    // Word 專用行內樣式 (Microsoft Office 支援的基礎 CSS)
-                    exportHtml += `<span style="background-color: #C8E6C9; color: #1B5E20; text-decoration: underline;">${textForWord}</span>`;
+                    // 新增：維持紅色，潛意識連結「擴張、獲利、新價值」
+                    displayHtml += `<span class="bg-red-100 text-red-800 underline decoration-2 decoration-red-600 px-0.5 rounded-sm">${textForWeb}</span>`;
+                    exportHtml += `<span style="background-color: #FFCDD2; color: #B71C1C; text-decoration: underline;">${textForWord}</span>`;
                 } else if (part.removed) {
-                    // 刪除：紅色刪除線與網底
-                    displayHtml += `<span class="bg-red-100 text-red-800 line-through decoration-red-600 px-0.5 rounded-sm">${textForWeb}</span>`;
-                    exportHtml += `<span style="background-color: #FFCDD2; color: #B71C1C; text-decoration: line-through;">${textForWord}</span>`;
+                    // 刪除：改為綠色，潛意識連結「止損、無害退場」
+                    displayHtml += `<span class="bg-green-100 text-green-800 line-through decoration-green-600 px-0.5 rounded-sm">${textForWeb}</span>`;
+                    exportHtml += `<span style="background-color: #C8E6C9; color: #1B5E20; text-decoration: line-through;">${textForWord}</span>`;
                 } else {
                     // 未變更：維持原樣
                     displayHtml += `<span>${textForWeb}</span>`;
